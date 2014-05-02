@@ -1,0 +1,368 @@
+\documentclass[a4paper, pdftex]{tufte-handout}
+
+%\usepackage{a4wide}
+\usepackage{visual-erlang}
+\usepackage{subfig}
+
+
+\geometry{vmargin=2cm,width=180mm}
+
+%\usepackage[T1]{fontenc}
+%\usepackage{dejavu}
+
+
+\title{Visual Erlang}
+\author{Torben Hoffmann}%{e-mail: torben.lehoff at gmail.com}}
+\date{Version 0.1.0}
+
+\begin{document}
+\maketitle
+
+
+\begin{abstract}
+  Visual Erlang is a notation for describing architectures of Erlang systems
+  \sidenote{\textbf{NOTE:} this is work in progress, so there are things related to
+    both the graphical and textual notation that has to be improved based on the
+    feedback received.}.
+
+  The notation is a dual graphical and textual version with a one to one mapping
+  between the two.
+
+  It is not the intention that all details of Erlang programs can be captured in
+  Visual Erlang --- the focus is on making it easier to communicate the architecture.
+\end{abstract}
+
+
+
+The two building blocks of Erlang --- processes and modules -- will be used to attach
+the functionality of a system.
+
+Erlang uses message passing, so there will be a symbol for that in Visual Erlang, but
+Visual Erlang follows the good practice that most things should be hidden behind an
+API, e.g., if you have a \verb|gen_server| you will not send messages to it directly
+using \verb|gen_server:call/2|, but rather provide an API function in a module that
+will do it for you.
+
+However, there are cases where message passing is the right way to solve a problem,
+and then it is nice to have a notation for message passing.
+
+The caption of the figures showing how a certain element of Visual Erlang looks like
+will have the textual version of the same information. 
+
+\section{Visual Erlang Symbols}
+\label{sec:visu-erlang-symb}
+
+\subsection{Processes}
+\label{sec:processes}
+
+Visual Erlang uses an ellipse to represent a process since a circle is often hard to
+size nicely when the process names are long (Figure~\ref{fig:ve-process}). Luckily, a
+circle is also an ellipse, so no harm is done if you use a circle.
+
+
+\begin{marginfigure}
+  \begin{center}
+    \begin{tikzpicture}
+      \node [ve-process] {my\_process};
+    \end{tikzpicture}
+
+    \caption{\texttt{Process my\_process.}}
+    \label{fig:ve-process}
+  \end{center}
+\end{marginfigure}
+
+
+
+
+
+If a process traps exits it should be drawn with a double lined ellipse
+(Figure\ref{fig:ve-process-traps-exits}. 
+
+\begin{marginfigure}
+  \begin{center}
+    \begin{tikzpicture}
+      \node [ve-process-traps-exits] {P};
+    \end{tikzpicture}
+    \caption{\texttt{Process P traps exits.}}
+    \label{fig:ve-process-traps-exits}
+  \end{center}
+\end{marginfigure}
+
+
+Since dealing with failures is a very natural thing in Erlang we have notation for
+monitoring of processes. When $P_1$ monitors $P_2$ it is drawn as a double line
+ending with a circle (Figure~\ref{ve-monitoring}).
+
+\begin{marginfigure}
+  \centering
+    \begin{tikzpicture}
+      \node [ve-process] (p1) {$P_1$};
+      \node [ve-process, right=of p1] (p2) {$P_2$};
+      \draw [ve-monitors] (p1) -- (p2); 
+    \end{tikzpicture}
+  
+  \caption{\texttt{P1 monitors P2.}}
+  \label{fig:ve-monitoring}
+\end{marginfigure}
+
+
+Linking is the dual of monitoring with the extra twist that the linked processes will
+die together. Linking is drawn with circles at both ends of a double line
+(Figure~\ref{fig:ve-linking}). 
+
+
+\begin{marginfigure}
+  \centering
+    \begin{tikzpicture}
+      \node [ve-process] (p1) {$P_1$};
+      \node [ve-process, right=of p1] (p2) {$P_2$};
+      \draw [ve-link] (p1) -- (p2); 
+    \end{tikzpicture}
+  \caption{\texttt{P1 and P2 are linked.}}
+  \label{fig:ve-linking}
+\end{marginfigure}
+
+
+\newpage
+
+Especially for supervision trees it is important which process has spawned another
+process, so in order to show that $P_1$ has spawned $P_2$ an arrow head is drawn
+towards $P_2$ (Figure~\ref{fig:ve-spawn}).
+
+\begin{marginfigure}
+  \centering
+    \begin{tikzpicture}
+      \node [ve-process] (p1) {$P_1$};
+      \node [ve-process, right=of p1] (p2) {$P_2$};
+      \draw [ve-spawn] (p1) -- (p2); 
+    \end{tikzpicture}
+  \caption{\texttt{P1 spawns P2.}}
+  \label{fig:ve-spawn}
+\end{marginfigure}
+
+For supervisors it is the case that they both spawns and links to their child
+processes. This is shown by combining the symbols for spawning and linking
+(Figure~\ref{fig:ve-spawn-linking}).
+
+\begin{marginfigure}
+  \centering
+    \begin{tikzpicture}
+      \node [ve-process] (p1) {$P_1$};
+      \node [ve-process, right=of p1] (p2) {$P_2$};
+      \draw [ve-spawn-link] (p1) -- (p2); 
+    \end{tikzpicture}
+  \caption{\texttt{P1 spawn-links P2.}}
+  \label{fig:ve-spawn-linking}
+\end{marginfigure}
+
+
+\subsection{Messages and Trap Exit Signals}
+\label{sec:messages-trap-exit}
+
+Showing the sending of messages is meant to be a low-level thing and not to be the
+guiding principle in Erlang systems. Most of the time message passing will hidden
+inside modules like the components from the OTP library encourages. In the situations
+where you have to send a message it is shown as a curly line going from sender to
+receiver with the message on top of the line (Figure~\ref{fig:ve-send-message}).
+
+\begin{marginfigure}
+  \centering
+    \begin{tikzpicture}
+      \node [ve-process] (p1) {$P_1$};
+      \node [ve-process, right=of p1] (p2) {$P_2$};
+       \path (p1) edge [ve-send]  node [above, align=center, midway] {M} (p2);
+    \end{tikzpicture}
+  \caption{\texttt{P1 sends M to P2.}}
+  \label{fig:ve-send-message}
+\end{marginfigure}
+
+
+Trap exit signals are turned into \texttt{'DOWN'} messages when a process is trapping
+exits. The explicit flow of a trap exit message is shown with a zigzag line
+(Figure~\ref{fig:ve-trap-exit}). 
+
+\begin{marginfigure}
+  \centering
+    \begin{tikzpicture}
+      \node [ve-process-traps-exits] (p1) {$P_1$};
+      \node [ve-process, right=of p1] (p2) {$P_2$};
+      \path (p1) edge [ve-link] (p2);
+      \path (p2) edge [ve-exit-signal, bend left]  (p1);
+    \end{tikzpicture}  
+  \caption{Trap exit handling}
+  \label{fig:ve-trap-exit}
+\end{marginfigure}
+
+This way of showing trap exits does not say much about what happens inside $P_1$ when
+the \texttt{'DOWN'} message is received. When you want to say something about that
+you can designate an abstract functionality to a process as shown in
+Figure~\ref{fig:ve-abstract-functionality}. ``Why not write exactly which part of the
+code handles the trap exit?'' you might ask. The reason is that in many cases you are
+only interested in seeing what happens as a result of receiving a message, in
+particular when it is a \texttt{'DOWN'} message; exactly which function in a module
+that handles it is not of interest when communicating at the architecture level.
+
+\begin{marginfigure}
+  \centering
+  \begin{tikzpicture}
+    \node [ve-process-traps-exits] (p1) {$P_1$};
+    \node [ve-process, right=of p1] (p2) {$P_2$};
+    \path (p1) edge [ve-link] (p2);
+    \node [ve-functionality, below=of p1] (p1-f1) {handle\_down};
+    \path (p1) edge (p1-f1);
+    \path (p2) edge [ve-exit-signal] node [below right, align=center, midway] {'DOWN'} (p1-f1);
+  \end{tikzpicture}
+  \caption{\texttt{Process P1 has functionality handle\_down.}\\
+    \texttt{Functionality handle\_down handles 'DOWN' message.}}
+  \label{fig:ve-abstract-functionality}
+\end{marginfigure}
+
+
+\subsection{Modules, Processes and APIs}
+\label{sec:modul-proc-apis}
+
+A corner stone in good Erlang programming --- or most programming for that matter ---
+is to provide APIs that encapsulates the implementation.
+
+APIs in Erlang are given as exported functions from a module.
+
+A module exporting a function is shown as a double rectangle for the module and a
+diamond arrow head from the module to the function it exports. Functions are shown as
+rectangles containing the name and arity of the function. See
+Figure~\ref{fig:ve-module-api}.
+
+\begin{marginfigure}
+  \centering
+  \begin{tikzpicture}
+    \node [ve-module] (m1) {\verb|my_mod|};
+    \node [ve-function, below=of m1] (f) {\verb|f/N|};
+    \path (m1) edge [ve-has-api] (f);
+  \end{tikzpicture}
+  \caption{\texttt{Module my\_mod has API f/N}}
+  \label{fig:ve-module-api}
+\end{marginfigure}
+
+Processes are --- in general --- started through a module. This is shown as a filled
+diamond arrow head pointing towards the module as in Figure~\ref{}.
+
+\begin{marginfigure}
+  \centering
+  \begin{tikzpicture}
+    \node [ve-module] (m1) {\verb|my_mod|};
+    \node [ve-process, below=of m1] (p1) {$P_1$};
+    \path (m1) edge [ve-has-instance] (p1);
+  \end{tikzpicture}
+  \caption{\texttt{Module my\_mod has instance P1.}}
+  \label{fig:ve-module-process-instance}
+\end{marginfigure}
+
+For the majority of the cases the process will be what is referred to and in that
+case one can use the shorthand in
+Figure~\ref{fig:ve-module-process-instance-shorthand}, where the name of the module
+that $P_1$ is an instance of is given after the process name separated with a colon. 
+
+\begin{marginfigure}
+  \centering
+  \begin{tikzpicture}
+    \node [ve-process] (p1) {$P_1$:\verb|my_mod|};
+  \end{tikzpicture}
+  \caption{\texttt{Process P1 is an instance of  my\_mod.}}
+  \label{fig:ve-module-process-instance-shorthand}
+\end{marginfigure}
+
+\newpage
+
+Since the name of the module is often used to refer to the process when there is only
+one instance of process you can give the name of the module surrounded by colons as a
+shorthand as in Figure~\ref{fig:ve-module-process-instance-shorthand2}.
+
+\begin{marginfigure}
+  \centering
+  \begin{tikzpicture}
+    \node [ve-process] (p1) {\verb|:my_mod:|};
+  \end{tikzpicture}
+  \caption{\texttt{ModuleProcess my\_mod.}}
+  \label{fig:ve-module-process-instance-shorthand2}
+\end{marginfigure}
+
+When an API in a module towards a process always involves interaction with the
+process it is permitted to associate functions of the module with the process
+instance as shown in Figure~\ref{fig:ve-process-api}.
+
+\begin{marginfigure}
+  \centering
+  \begin{tikzpicture}
+    \node [ve-process] (p1) {$P_1$:\verb|my_mod|};
+    \node [ve-function, below=of m1] (f) {\verb|f/N|};
+    \path (p1) edge [ve-has-api] (f);
+  \end{tikzpicture}
+  \caption{\texttt{Process P1 has API f/N.}}
+  \label{fig:ve-process-api}
+\end{marginfigure}
+
+This is the predominant situation, but in some cases one has functions that do not
+involve the process and then you see diagrams like in
+Figure~\ref{fig:ve-module-process-api-sharing}. This allows you to clearly
+communicate which functions of the API that involves the process and which are
+``merely'' regular functions.
+
+\begin{marginfigure}
+  \centering
+  \begin{tikzpicture}
+    \node [ve-module] (m) {\verb|my_mod|};
+    \node [ve-function, below=of m] (f) {\verb|f/N|};
+    \path (m) edge[ve-has-api] (f);
+    \node [ve-process, below right=of m] (p) {$P_1$};
+    \path (m) edge [ve-has-instance] (p);
+    \node [ve-function, below=of p] (g) {\verb|g/N|};
+    \path (p) edge[ve-has-api] (g);
+  \end{tikzpicture}
+  \caption{\texttt{Module my\_mod has instance P1.}\\
+    \texttt{my\_mod has API f/N}\\
+    \texttt{P1 has API g/N}
+  }
+  \label{fig:ve-module-process-api-sharing}
+\end{marginfigure}
+
+\subsection{Invoking functions}
+\label{sec:invoking-functions}
+
+Since APIs are given in terms of functions we need a way to invoke the functions and
+that is done using an arrow ending with a triangle arrow head from the caller to the
+function as seen in Figure~\ref{}. Above the arrow you can see the arguments
+(either the types or some saying names) and below it you can see a short arrow
+followed by the result to be returned to the caller. If the result isn't important it
+can be left out.
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+    \node [ve-module] (m1) {\verb|m1|};
+    \node [ve-function, below=of m] (f) {\verb|f/N|};
+    \path (m) edge[ve-has-api] (f);
+    \node [ve-module, right=5cm of m1] (m2) {\verb|m2|};
+    \node [ve-function, below=of m2] (g) {\verb|g/N|};
+    \path (m2) edge[ve-has-api] (g);
+    \vefunctioncallreturn{f}{g}{(arg1, arg2)}{\vereturnleft{sometype()}}
+  \end{tikzpicture}
+  \caption{tbd}
+  \label{fig:ve-invoke-function}
+\end{figure}
+
+\subsection{Missing Notation}
+\label{sec:missing-notation}
+
+\begin{itemize}
+\item ETS tables.
+\item states in \verb|gen_fsm|   
+\end{itemize}
+
+
+
+\end{document}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

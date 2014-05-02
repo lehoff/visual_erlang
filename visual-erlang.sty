@@ -1,0 +1,57 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{visual-erlang}[2014/04/10 v0.0.1 Visual Erlang diagrams]
+
+%\RequirePackage{xifthen}
+%\RequirePackage{textcomp}
+\RequirePackage{MnSymbol}
+\RequirePackage{tikz}%[v3.0.0]
+\usetikzlibrary{shapes.geometric, arrows.meta, shapes.misc }
+\usetikzlibrary{calc, positioning}
+
+\usetikzlibrary{decorations.pathmorphing}
+
+%% perhaps this can be removed?
+\usepgflibrary{shapes.multipart, arrows}
+
+\RequirePackage{makeshape}
+\RequirePackage{amsmath}
+
+
+\tikzset{ve-entity/.style={draw, thick}}
+
+\tikzset{ve-process/.style={shape=ellipse, ve-entity}}
+
+\tikzset{ve-process-traps-exits/.style={ve-process, double, draw}}
+
+\tikzset{ve-monitors/.style={ arrows={{}-{Circle[open
+        ,length=5pt
+        ]}}, double, draw}}
+\tikzset{ve-link/.style={ arrows={Circle[open,length=5pt]-{Circle[open,length=5pt]}}, double, draw}}
+\tikzset{ve-spawn-link/.style={ arrows={Circle[open,length=5pt]-{Latex[open].Circle[open,length=5pt]}}, double, draw}}
+\tikzset{ve-spawn/.style={ arrows={-{Latex[open]}}, double, draw}}
+
+\tikzset{ve-send/.style={decorate, decoration={snake,post length=1mm}, draw, arrows={-{Latex[open]}}}}
+\tikzset{ve-exit-signal/.style={decorate, decoration={zigzag, post length=2mm}, draw, arrows={-Latex[open]}}}
+
+\tikzset{ve-functionality/.style={chamfered rectangle, draw}}
+
+\tikzset{ve-module/.style={rectangle, double, draw}}
+
+\tikzset{ve-function/.style={rectangle, draw}}
+
+\tikzset{ve-has-api/.style={draw, arrows={Diamond[open]-}}}
+\tikzset{ve-has-instance/.style={draw, arrows={Diamond[]-}}}
+
+\tikzset{ve-function-call/.style={draw, arrows={->}}}
+
+\newcommand{\vereturnleft}[1]{%
+  #1 $\leftarrow$}
+
+\newcommand{\vereturnright}[1]{%
+  $\rightarrow$ #1}
+
+\newcommand{\vefunctioncall}[3]{%
+  \path (#1) edge[ve-function-call] node[above,midway] {#3} (#2);}
+\newcommand{\vefunctioncallreturn}[4]{%
+  \path (#1) edge[ve-function-call] node[above,midway] {#3} node[below,midway] {#4}
+  (#2);} 
